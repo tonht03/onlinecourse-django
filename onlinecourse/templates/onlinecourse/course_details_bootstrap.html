@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ course.name }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">Online Courses</a>
+    {% if user.is_authenticated %}<span class="text-white">{{ user.username }}</span>{% endif %}
+</nav>
+
+<div class="container mt-4">
+    <h2>{{ course.name }}</h2>
+    <p class="lead">{{ course.description }}</p>
+
+    <h4 class="mt-4">Lessons</h4>
+    <div class="card-columns">
+        {% for lesson in course.lesson_set.all %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Lesson {{ forloop.counter }}: {{ lesson.title }}</h5>
+                <p class="card-text">{{ lesson.content }}</p>
+            </div>
+        </div>
+        {% empty %}
+        <p>No lessons available.</p>
+        {% endfor %}
+    </div>
+
+    {% if user.is_authenticated %}
+        <hr>
+        <h4>Exam</h4>
+        <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
+            {% csrf_token %}
+            {% for question in course.question_set.all %}
+            <div class="card mt-3">
+                <div class="card-header"><b>{{ question.question_text }}</b></div>
+                <div class="card-body">
+                    {% for choice in question.choice_set.all %}
+                    <div class="form-check">
+                        <input type="checkbox" name="choice_{{ choice.id }}" value="{{ choice.id }}"
+                               class="form-check-input" id="choice_{{ choice.id }}">
+                        <label class="form-check-label" for="choice_{{ choice.id }}">{{ choice.choice_text }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <p>No exam questions yet.</p>
+            {% endfor %}
+            {% if course.question_set.exists %}
+            <input class="btn btn-success mt-3 mb-5" type="submit" value="Submit">
+            {% endif %}
+        </form>
+        <a class="btn btn-outline-primary mb-4" href="{% url 'onlinecourse:enroll' course.id %}">Enroll in this course</a>
+    {% else %}
+        <p class="mt-4"><a href="{% url 'login' %}">Log in</a> to enroll and take the exam.</p>
+    {% endif %}
+</div>
+</body>
+</html>
